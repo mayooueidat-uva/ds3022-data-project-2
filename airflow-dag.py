@@ -9,7 +9,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 
 # AWS SQS client
-sqs = boto3.client('sqs')
+sqs = boto3.client('sqs', region_name='us-east-1')
 
 # URLs
 url = "https://j9y2xa0vx0.execute-api.us-east-1.amazonaws.com/api/scatter/zvd6vz"
@@ -131,7 +131,7 @@ with DAG(
     dag_id='sqs_message_pipeline',
     default_args=default_args,
     description='Retrieve, sort, and send SQS messages',
-    schedule_interval=None,  # Run manually or trigger externally
+    schedule=None,  # Run manually or trigger externally
     start_date=datetime(2025, 10, 31),
     catchup=False,
     tags=['aws', 'sqs', 'api']
@@ -140,20 +140,17 @@ with DAG(
     # define tasks
     get_messages = PythonOperator(
         task_id='get_messages',
-        python_callable=get_message,
-        provide_context=True,
+        python_callable=get_message
     )
 
     reassemble = PythonOperator(
         task_id='reassemble_messages',
         python_callable=reassemble_messages,
-        provide_context=True,
     )
 
     send = PythonOperator(
         task_id='send_solution',
         python_callable=send_solution,
-        provide_context=True,
     )
 
     # define DAG dependencies
